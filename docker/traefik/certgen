@@ -1,0 +1,2 @@
+source ../.env
+mkcert -key-file ./config/ssl/key.pem -cert-file ./config/ssl/cert.pem ${PROJECT_NAME}.localhost localhost

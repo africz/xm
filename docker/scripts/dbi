@@ -1,0 +1,9 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+    # Variable is empty
+    echo "Parameter is missing!! ex sql/anything.sql"
+    exit
+fi
+source ../.env
+docker exec -it ${PROJECT_NAME}-ubuntu-mysql mysql -u $PROJECT_NAME -p$PROJECT_NAME -e "source /$1" $PROJECT_NAME
+

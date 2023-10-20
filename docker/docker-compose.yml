@@ -1,0 +1,58 @@
+version: '3.8'
+services:
+  mysql:
+    container_name: ${PROJECT_NAME}-${CONFIG}-mysql
+    image: ${PROJECT_NAME}-mysql:latest
+    build: ${CONFIG}/mysql
+    restart: no
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${PROJECT_NAME} 
+      MYSQL_USER: ${PROJECT_NAME}
+      MYSQL_PASSWORD: ${PROJECT_NAME}
+      TZ: UTC
+    #tty: true
+    #command: /bin/bash
+    ports:
+      - "3306:3306"
+    volumes:
+      - ${PROJECT_NAME}-db:/var/lib/mysql
+      - type: bind
+        source: ${PROJECT_PATH}/sql
+        target: /sql
+
+    networks:
+      - host_network
+
+  apache:
+    container_name: ${PROJECT_NAME}-${CONFIG}-apache
+    image: ${PROJECT_NAME}-apache:latest
+    build: ${CONFIG}/apache
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.xm.rule=Host(`xm.localhost`)
+      - traefik.http.routers.xm.tls=${DOCKER_STACK_SSL}
+    volumes:
+      - ${PROJECT_PATH}/tmp/xdebug:/tmp/xdebug
+      - ${PROJECT_PATH}/root:/var/www/html:delegated
+    networks:
+      - proxy
+      - host_network
+    command: /entrypoint.sh
+    #tty: true
+    #command: /bin/bash
+    environment:
+      - XDEBUG_MODE=debug
+      - XDEBUG_OUTPUT_DIR=/tmp/xdebug
+      - XDEBUG_START=yes    
+
+networks:
+  host_network:
+    driver: bridge
+  proxy:
+    external: true
+
+volumes:
+  xm-db:
+    

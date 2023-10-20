@@ -1,0 +1,16 @@
+#!/bin/bash
+set -a
+source .env
+if [ "$DOCKER_STACK_SSL" = "true" ]
+then
+   PROT=https
+else
+    PROT=http
+fi
+echo DOCKER_STACK_SSL is: $DOCKER_STACK_SSL used protocol is: $PROT
+
+# if [ ! "$(docker network ls | grep api_container_network)" ]; then
+#  docker network create platform-api_container_network
+# fi
+
+

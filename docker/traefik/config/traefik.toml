@@ -1,0 +1,31 @@
+[serversTransport]
+insecureSkipVerify = true
+ 
+[entryPoints]
+ 
+[entryPoints.http]
+address = ":80"
+ 
+[entryPoints.https]
+address = ":443"
+ 
+[providers]
+ 
+[providers.docker]
+watch = true
+endpoint = "unix:///var/run/docker.sock"
+exposedByDefault = false
+ 
+[api]
+insecure = true
+dashboard = true
+debug = true
+ 
+[log]
+level = "DEBUG"
+ 
+[accesslog]
+ 
+[providers.file]
+filename = "/root/.config/ssl.toml"
+

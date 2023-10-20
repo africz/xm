@@ -1,0 +1,4 @@
+if [ ! "$(docker network ls | grep proxy)" ]; then
+ docker network create proxy
+fi
+docker-compose up -d 
