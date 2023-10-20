@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Config;
+use DB;
 
 
 class GetStockData extends Command
@@ -29,7 +30,7 @@ class GetStockData extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         Log::info(self::LID . __FUNCTION__ . 'start execution');
         $this->symbols = Config::get('symbols.usa');
@@ -40,13 +41,15 @@ class GetStockData extends Command
                 (count($this->symbols) > 0)
             ) {
                 foreach ($this->symbols as $symbol) {
-                    $tmp = Config::get('symbols.api_url');
 
                     $api_url = sprintf(Config::get('symbols.api_url'), self::FUNCTION , $symbol, Config::get('symbols.api_key'));
                     $json = file_get_contents($api_url);
 
                     $data = json_decode($json, true);
                     Log::debug(self::LID . __FUNCTION__ . ':' . $symbol . ':received data:', $data);
+                    if (!empty($data)) {
+                        $this->saveResult($data);
+                    }
                 }
 
             }
@@ -54,7 +57,18 @@ class GetStockData extends Command
             Log::error(self::LID . __FUNCTION__ . ':' . $e->getMessage());
             exit(1);
         }
-        Log::info(self::LID . __FUNCTION__ . ':'.'end execution');
+        Log::info(self::LID . __FUNCTION__ . ':' . 'end execution');
         exit(0);
+    }
+
+    private function saveResult(array $data): void
+    {
+        try
+        {
+
+        }
+        catch (\Exception $e) {
+            Log::error(self::LID . __FUNCTION__ . ':' . $e->getMessage());
+        }
     }
 }
