@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,10 +12,17 @@ return new class extends Migration
     {
         Schema::create('symbols', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->length(10);
-            $table->string('description')->length(40);
+            $table->string('market')->length(10);
+            $table->string('symbol')->length(10);
+            $table->string('timezone')->length(20);
             $table->timestamps();
+            $table->unique([
+                'market',
+                'symbol',
+                'timezone',
+            ], 'MarketSymbol');
         });
+
     }
 
     /**

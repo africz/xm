@@ -4,9 +4,11 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use App\Models\Symbols;
+use App\Models\StockData;
 use Config;
 use DB;
-
+use Carbon\Carbon;
 
 class GetStockData extends Command
 {
@@ -74,6 +76,23 @@ class GetStockData extends Command
     private function saveResult(array $data): void
     {
         try {
+            $stockData = new StockData($data);
+            $symbols = new Symbols();
+
+            $symbols->market = Config::get('symbols.market');
+            $symbols->symbol = $stockData->getSymbol();
+            $symbols->timezone = $stockData->getTimeZone();
+
+            $findResult = DB::table('symbols')
+                ->where('market', '=', Config::get('symbols.market'))
+                ->where('symbol', '=', $stockData->getSymbol())
+                ->where('timezone', '=', $stockData->getTimeZone())
+                ->update(['updated_at'=>Carbon::now()->toDateTimeString()]);
+            if (!$findResult) {
+                $symbols->save();
+            }
+
+            
 
         } catch (\Exception $e) {
             Log::error(self::LID . __FUNCTION__ . ':' . $e->getMessage());
