@@ -26,6 +26,7 @@ class GetStockData extends Command
     protected $description = 'Command description';
 
     private const FUNCTION = 'TIME_SERIES_DAILY';
+    private const LOCALTEST = 'LOCALTEST';
     private const LID = 'GetStockData::';
     /**
      * Execute the console command.
@@ -34,6 +35,7 @@ class GetStockData extends Command
     {
         Log::info(self::LID . __FUNCTION__ . 'start execution');
         $this->symbols = Config::get('symbols.usa');
+
         try {
             if (
                 !empty($this->symbols) &&
@@ -42,8 +44,7 @@ class GetStockData extends Command
             ) {
                 foreach ($this->symbols as $symbol) {
 
-                    $api_url = sprintf(Config::get('symbols.api_url'), self::FUNCTION , $symbol, Config::get('symbols.api_key'));
-                    $json = file_get_contents($api_url);
+                    $json = file_get_contents($this->getApiUrl($symbol));
 
                     $data = json_decode($json, true);
                     Log::debug(self::LID . __FUNCTION__ . ':' . $symbol . ':received data:', $data);
@@ -61,13 +62,20 @@ class GetStockData extends Command
         exit(0);
     }
 
+    private function getApiUrl($symbol): string
+    {
+        $retVal = sprintf(Config::get('symbols.api_url'), self::FUNCTION , $symbol, Config::get('symbols.api_key'));
+        if (Config::get('symbols.api_mode') === self::LOCALTEST) {
+            $retVal = sprintf(Config::get('symbols.api_test_url'), self::FUNCTION , $symbol, Config::get('symbols.api_key'));
+        }
+        Log::debug(self::LID . __FUNCTION__ . ':return:' . $retVal);
+        return $retVal;
+    }
     private function saveResult(array $data): void
     {
-        try
-        {
+        try {
 
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error(self::LID . __FUNCTION__ . ':' . $e->getMessage());
         }
     }
