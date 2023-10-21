@@ -68,21 +68,48 @@ class GetStockData extends Command
     }
 
 
+    //     $processCompleted = false;
+// $interval = 2; //seconds
+// $request = curl_init('http://www.example.com/');
+// curl_setopt($request, CURLOPT_RETURNTRANSFER, true);
+// curl_setopt($request, CURLOPT_HTTPHEADER, array('Content-Type:application/json','Authorization:'.$token));
+
+    // while(!$processCompleted) {
+
+    //     $response = curl_exec($request);
+//     // Check HTTP status code
+//     if (!curl_errno($response)) {
+//         switch ($http_code = curl_getinfo($request , CURLINFO_HTTP_CODE)) {
+//         case 200:  # OK
+//             ...//do your stuff
+//             break;
+//         default:
+//             sleep($interval);
+//         }
+//     }
+// }
+// curl_close($ch);
+
+
     private function getUrlContent($url): string
     {
+        $completed = false;
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL,  $url);
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_FAILONERROR, true); // Required for HTTP error codes to be reported via our call to curl_error($ch)
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HEADER, 0); // no headers in the output
-        $result=curl_exec($ch);
-        if (curl_errno($ch)) {
-            $error_msg = curl_error($ch);
-        }
-        curl_close($ch);
-
-        if (isset($error_msg)) {
-            // TODO - Handle cURL error accordingly
+        $interval = 5; //seconds
+        while (!$completed) {
+            $result = curl_exec($ch);
+            // Check HTTP status code
+            if (!curl_errno($ch)) {
+                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                if ($http_code === 200) {
+                    break;
+                }
+                sleep($interval);
+            }
         }
         return $result;
     }
