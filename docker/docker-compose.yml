@@ -2,7 +2,7 @@ version: '3.8'
 services:
   mysql:
     container_name: ${PROJECT_NAME}-${CONFIG}-mysql
-    image: ${PROJECT_NAME}-mysql:latest
+    image: ${PROJECT_NAME}-${CONFIG}-mysql:latest
     build: ${CONFIG}/mysql
     restart: no
     environment:
@@ -26,7 +26,7 @@ services:
 
   apache:
     container_name: ${PROJECT_NAME}-${CONFIG}-apache
-    image: ${PROJECT_NAME}-apache:latest
+    image: ${PROJECT_NAME}-${CONFIG}-apache:latest
     build: ${CONFIG}/apache
     labels:
       - traefik.enable=true
@@ -46,6 +46,17 @@ services:
       - XDEBUG_MODE=debug
       - XDEBUG_OUTPUT_DIR=/tmp/xdebug
       - XDEBUG_START=yes    
+
+  redis:
+    container_name: ${PROJECT_NAME}-${CONFIG}-redis
+    image: ${PROJECT_NAME}-${CONFIG}-redis:latest
+    build: ${CONFIG}/redis
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - proxy
+      - host_network
+    
 
 networks:
   host_network:

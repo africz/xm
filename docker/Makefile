@@ -1,4 +1,5 @@
 LINUX_SHELL ?=/bin/bash
+WORKFOLDER=/var/www/html
 ENV_FILE = .env
 RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 .PHONY: list
@@ -14,49 +15,50 @@ up/network:
 	$(call upNetwork)
 up/traefik:
 	$(call upTraefik)
-up/web:
-	$(call upPlatform,web)
 
 down:
 	$(call down)
 down/traefik:
 	$(call downTraefik)
-down/web:
-	$(call downPlatform,web)
 
 mount/apache:
-	$(call mount_container,xm,apache)
+	$(call mount_container,apache)
 mount/mysql:
 	$(call mount_container,mysql)
+mount/redis:
+	$(call mount_container,redis)
 
 
 build:
 	$(call build_all)
-build/web/apache:
-	$(call build,web,apache)
-build/web/mysql:
-	$(call build,web,mysql)
-build/traefik:
-	$(call build_all,traefik)
+build/apache:
+	$(call build,apache)
+build/mysql:
+	$(call build,mysql)
+build/redis:
+	$(call build,redis)
 
-logs/web/apache:
-	$(call container_log,web-apache)
-logs/web/mysql:
-	$(call container_log,web-mysql)
+logs/apache:
+	$(call container_log,apache)
+logs/mysql:
+	$(call container_log,mysql)
+logs/redis:
+	$(call container_log,redis)
 
 define mount_container
 	$(call setup_env,$(ENV_FILE))
-	@docker exec -it $(1)-${CONFIG}-$(2) $(LINUX_SHELL)
+	@docker exec -it -w ${WORKFOLDER} ${PROJECT_NAME}-${CONFIG}-$(1) $(LINUX_SHELL)
 endef
 
 define container_log
-	@docker logs -f $(1)
+	$(call setup_env,$(ENV_FILE))
+	docker logs -f ${PROJECT_NAME}-${CONFIG}-$(1)
 endef
 
 define build
 	@set -a
 	$(call setup_env,$(ENV_FILE))
-	@cd $1 && docker-compose --env-file $(ENV_FILE) build --build-arg platform=$(PLATFORM) $(2)
+	@docker-compose --env-file $(ENV_FILE) build --build-arg platform=$(PLATFORM) $(1)
 endef
 
 define build_all

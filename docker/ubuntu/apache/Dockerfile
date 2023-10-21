@@ -1,6 +1,5 @@
 ARG  platform arm64v8
 FROM ${platform}/ubuntu
-LABEL version="1.0.0"
 
 ENV XDEBUG_OUTPUT_DIR /tmp/xdebug
 ENV XDEBUG_MODE debug
