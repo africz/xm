@@ -12,6 +12,7 @@ return [
     'usa' => explode(',', env('SYMBOLS_USA')),
     'interval' => env('ALPHA_VANTAGE_API_INTERVAL'),
     'try_reconnect' => env('ALPHA_VANTAGE_API_TRY_TO_RECONNECT'),
-    'reconnect_interval' => env('ALPHA_VANTAGE_API_RECONNECT_INTERVAL')
+    'reconnect_interval' => env('ALPHA_VANTAGE_API_RECONNECT_INTERVAL'),
+    'redis_key' => env('ALPHA_VANTAGE_API_REDIS_KEY')
 
 ];

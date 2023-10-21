@@ -10,6 +10,7 @@ use App\Models\StockData\IntraDayData;
 use Config;
 use DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Redis;
 
 class GetStockData extends Command
 {
@@ -132,42 +133,47 @@ class GetStockData extends Command
         try {
             $stockData = new IntraDayData($data);
             DB::beginTransaction();
-            $this->saveSymbolsHistory($stockData);
-            $this->saveSymbols($stockData);
+            $id = $this->saveSymbols($stockData);
+            $this->saveSymbolsHistory($id, $stockData);
             DB::commit();
+            $this->saveToRedis($stockData->getSymbol(),$data);
         } catch (\Exception $e) {
             DB::rollback();
             Log::error(self::LID . __FUNCTION__ . ':' . $e->getMessage());
         }
     }
-    private function saveSymbols(IntraDayData $stockData): void
+    private function saveSymbols(IntraDayData $stockData): int
     {
+        $retVal = 0;
         $symbols = new Symbols();
 
-        $symbols->market = Config::get('symbols.market','USA');
+        $symbols->market = Config::get('symbols.market', 'USA');
         $symbols->symbol = $stockData->getSymbol();
         $symbols->timezone = $stockData->getTimeZone();
 
         $findResult = DB::table('symbols')
-            ->where('market', '=', Config::get('symbols.market','USA'))
+            ->where('market', '=', Config::get('symbols.market', 'USA'))
             ->where('symbol', '=', $stockData->getSymbol())
             ->where('timezone', '=', $stockData->getTimeZone())
             ->update(['updated_at' => Carbon::now()->toDateTimeString()]);
+        $retVal = DB::getPdo()->lastInsertId();
         if (!$findResult) {
             $symbols->save();
+            $retVal = $symbols->id;
         }
+        return $retVal;
     }
 
-    private function saveSymbolsHistory(IntraDayData $stockData): void
+    private function saveSymbolsHistory(int $id, IntraDayData $stockData): void
     {
-        $timeSeries = $stockData->getTimeSeries(Config::get('symbols.interval',self::INTERVAL['5min']));
+        $timeSeries = $stockData->getTimeSeries(Config::get('symbols.interval', self::INTERVAL['5min']));
 
         if (!count($timeSeries)) {
             return;
         }
         foreach ($timeSeries as $key => $value) {
             $symbolsHistory = new SymbolsHistory();
-            $symbolsHistory->symbol = $stockData->getSymbol();
+            $symbolsHistory->symbols_id = $id;
             $symbolsHistory->time = $value['time'];
             $symbolsHistory->open = $value['open'];
             $symbolsHistory->high = $value['high'];
@@ -176,7 +182,11 @@ class GetStockData extends Command
             $symbolsHistory->volume = $value['volume'];
             $symbolsHistory->save();
         }
+    }
 
-
+    private function saveToRedis(string $symbol, array $data): void
+    {
+        $market=Config::get('symbols.market', 'USA');
+        Redis::set(Config::get('symbols.redis_key') . $market.'_'.$symbol, json_encode($data));
     }
 }

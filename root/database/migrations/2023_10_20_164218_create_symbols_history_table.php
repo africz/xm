@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('symbols_history', function (Blueprint $table) {
             $table->id();
-            $table->string('symbol')->length(10);
+            $table->bigInteger('symbols_id')->index('symbolsId');
             $table->dateTime('time');
             $table->float('open');
             $table->float('high');
@@ -23,10 +23,10 @@ return new class extends Migration
             $table->timestamps();
             $table->index([
                 'time',
-                'symbol',
+                'symbols_id',
             ], 'TimeSymbol');
             $table->index([
-                'symbol',
+                'symbols_id',
                 'time',
             ], 'SymbolTime');
 
