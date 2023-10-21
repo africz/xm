@@ -32,6 +32,7 @@ class GetStockData extends Command
     private const LOCALTEST = 'LOCALTEST';
     private const LID = 'GetStockData::';
     private const OUTPUT = ['full' => 'full', 'compact' => 'compact'];
+    private const INTERVAL = ['1min' => '1min', '5min' => '5min'];
     /**
      * Execute the console command.
      */
@@ -88,7 +89,7 @@ class GetStockData extends Command
             } else {
                 Log::error(self::LID . __FUNCTION__ . ':' . curl_error($ch));
             }
-            Log::info(self::LID . __FUNCTION__ . 'try to reconnect(' . ($i+1) . '/' . $tryToReconnect . ') after ' . $recInterval . 'sec sleep');
+            Log::info(self::LID . __FUNCTION__ . 'try to reconnect(' . ($i + 1) . '/' . $tryToReconnect . ') after ' . $recInterval . 'sec sleep');
             sleep($recInterval);
         }
         if ($i >= $tryToReconnect) {
@@ -99,12 +100,29 @@ class GetStockData extends Command
 
     private function getApiUrl($symbol): string
     {
-        $retVal = sprintf(Config::get('symbols.api_url'), self::FUNCTION , $symbol, Config::get('symbols.interval'), self::OUTPUT['compact'], Config::get('symbols.api_key'));
-        if (Config::get('symbols.api_mode') === self::LOCALTEST) {
-            $retVal = Config::get('symbols.api_test_url');
+        try {
+
+            if (empty(Config::get('symbols.api_url'))) {
+                throw new \Exception('API url in .env is empty.');
+            }
+            if (empty(Config::get('symbols.api_key'))) {
+                throw new \Exception('API key in .env is empty.');
+            }
+
+            $retVal = sprintf(Config::get('symbols.api_url'), self::FUNCTION , $symbol, Config::get(
+                'symbols.interval',
+                self::INTERVAL['5min']
+            ), self::OUTPUT['compact'], Config::get('symbols.api_key'));
+
+            if (Config::get('symbols.api_mode', 'SERVER') === self::LOCALTEST) {
+                $retVal = Config::get('symbols.api_test_url');
+            }
+
+            Log::debug(self::LID . __FUNCTION__ . ':return:' . $retVal);
+            return $retVal;
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
         }
-        Log::debug(self::LID . __FUNCTION__ . ':return:' . $retVal);
-        return $retVal;
     }
 
 
@@ -126,12 +144,12 @@ class GetStockData extends Command
     {
         $symbols = new Symbols();
 
-        $symbols->market = Config::get('symbols.market');
+        $symbols->market = Config::get('symbols.market','USA');
         $symbols->symbol = $stockData->getSymbol();
         $symbols->timezone = $stockData->getTimeZone();
 
         $findResult = DB::table('symbols')
-            ->where('market', '=', Config::get('symbols.market'))
+            ->where('market', '=', Config::get('symbols.market','USA'))
             ->where('symbol', '=', $stockData->getSymbol())
             ->where('timezone', '=', $stockData->getTimeZone())
             ->update(['updated_at' => Carbon::now()->toDateTimeString()]);
@@ -142,7 +160,7 @@ class GetStockData extends Command
 
     private function saveSymbolsHistory(IntraDayData $stockData): void
     {
-        $timeSeries = $stockData->getTimeSeries(Config::get('symbols.interval'));
+        $timeSeries = $stockData->getTimeSeries(Config::get('symbols.interval',self::INTERVAL['5min']));
 
         if (!count($timeSeries)) {
             return;
