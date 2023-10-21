@@ -21,6 +21,15 @@ return new class extends Migration
             $table->float('close');
             $table->integer('volume');
             $table->timestamps();
+            $table->index([
+                'time',
+                'symbol',
+            ], 'TimeSymbol');
+            $table->index([
+                'symbol',
+                'time',
+            ], 'SymbolTime');
+
         });
     }
 

@@ -42,23 +42,24 @@ class GetStockData extends Command
 
         try {
             if (
-                !empty($this->symbols) &&
-                is_array($this->symbols) &&
-                (count($this->symbols) > 0)
+                empty($this->symbols) &&
+                !is_array($this->symbols) &&
+                (count($this->symbols) < 1)
             ) {
-                foreach ($this->symbols as $symbol) {
-
-                    //$json = file_get_contents($this->getApiUrl($symbol));
-                    $json = $this->getUrlContent($this->getApiUrl($symbol));
-
-                    $data = json_decode($json, true);
-                    Log::debug(self::LID . __FUNCTION__ . ':' . $symbol . ':received data:', $data);
-                    if (!empty($data)) {
-                        $this->saveResult($data);
-                    }
-                }
-
+                throw new \Exception('No symbols defined in .env!');
             }
+
+            foreach ($this->symbols as $symbol) {
+                $json = $this->getUrlContent($this->getApiUrl($symbol));
+                $data = json_decode($json, true);
+
+                Log::debug(self::LID . __FUNCTION__ . ':' . $symbol . ':received data:', $data);
+
+                if (!empty($data)) {
+                    $this->saveResult($data);
+                }
+            }
+
         } catch (\Exception $e) {
             Log::error(self::LID . __FUNCTION__ . ':' . $e->getMessage());
             exit(1);
@@ -68,48 +69,30 @@ class GetStockData extends Command
     }
 
 
-    //     $processCompleted = false;
-// $interval = 2; //seconds
-// $request = curl_init('http://www.example.com/');
-// curl_setopt($request, CURLOPT_RETURNTRANSFER, true);
-// curl_setopt($request, CURLOPT_HTTPHEADER, array('Content-Type:application/json','Authorization:'.$token));
-
-    // while(!$processCompleted) {
-
-    //     $response = curl_exec($request);
-//     // Check HTTP status code
-//     if (!curl_errno($response)) {
-//         switch ($http_code = curl_getinfo($request , CURLINFO_HTTP_CODE)) {
-//         case 200:  # OK
-//             ...//do your stuff
-//             break;
-//         default:
-//             sleep($interval);
-//         }
-//     }
-// }
-// curl_close($ch);
-
-
     private function getUrlContent($url): string
     {
-        $completed = false;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_FAILONERROR, true); // Required for HTTP error codes to be reported via our call to curl_error($ch)
+        curl_setopt($ch, CURLOPT_FAILONERROR, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HEADER, 0); // no headers in the output
-        $interval = 5; //seconds
-        while (!$completed) {
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        $tryToReconnect = Config::get('symbols.try_reconnect', 5);
+        $recInterval = Config::get('symbols.reconnect_interval', 30);
+        for ($i = 0; $i < $tryToReconnect; $i++) {
             $result = curl_exec($ch);
-            // Check HTTP status code
             if (!curl_errno($ch)) {
                 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 if ($http_code === 200) {
                     break;
                 }
-                sleep($interval);
+            } else {
+                Log::error(self::LID . __FUNCTION__ . ':' . curl_error($ch));
             }
+            Log::info(self::LID . __FUNCTION__ . 'try to reconnect(' . ($i+1) . '/' . $tryToReconnect . ') after ' . $recInterval . 'sec sleep');
+            sleep($recInterval);
+        }
+        if ($i >= $tryToReconnect) {
+            throw new \Exception('Reconnections are  failed.');
         }
         return $result;
     }
