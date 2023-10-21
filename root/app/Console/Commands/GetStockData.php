@@ -83,11 +83,12 @@ class GetStockData extends Command
     {
         try {
             $stockData = new IntraDayData($data);
-
+            DB::beginTransaction();
             $this->saveSymbolsHistory($stockData);
             $this->saveSymbols($stockData);
-
+            DB::commit();
         } catch (\Exception $e) {
+            DB::rollback();
             Log::error(self::LID . __FUNCTION__ . ':' . $e->getMessage());
         }
     }
