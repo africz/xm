@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use App\Models\Symbols;
-use App\Models\StockData;
+use App\Models\StockData\IntraDay;
 use Config;
 use DB;
 use Carbon\Carbon;
@@ -27,9 +27,11 @@ class GetStockData extends Command
      */
     protected $description = 'Command description';
 
-    private const FUNCTION = 'TIME_SERIES_DAILY';
+    private const FUNCTION = 'TIME_SERIES_INTRADAY';
     private const LOCALTEST = 'LOCALTEST';
     private const LID = 'GetStockData::';
+    private const INTERVAL=['1m'=>'1min','5m'=>'5min'];
+    private const OUTPUT=['full'=>'full','compact'=>'compact'];
     /**
      * Execute the console command.
      */
@@ -51,7 +53,7 @@ class GetStockData extends Command
                     $data = json_decode($json, true);
                     Log::debug(self::LID . __FUNCTION__ . ':' . $symbol . ':received data:', $data);
                     if (!empty($data)) {
-                        $this->saveResult($data);
+                       $this->saveResult($data);
                     }
                 }
 
@@ -66,9 +68,9 @@ class GetStockData extends Command
 
     private function getApiUrl($symbol): string
     {
-        $retVal = sprintf(Config::get('symbols.api_url'), self::FUNCTION , $symbol, Config::get('symbols.api_key'));
+        $retVal = sprintf(Config::get('symbols.api_url'), self::FUNCTION , $symbol, self::INTERVAL['5m'],self::OUTPUT['compact'],Config::get('symbols.api_key'));
         if (Config::get('symbols.api_mode') === self::LOCALTEST) {
-            $retVal = sprintf(Config::get('symbols.api_test_url'), self::FUNCTION , $symbol, Config::get('symbols.api_key'));
+            $retVal = Config::get('symbols.api_test_url');
         }
         Log::debug(self::LID . __FUNCTION__ . ':return:' . $retVal);
         return $retVal;
@@ -76,7 +78,7 @@ class GetStockData extends Command
     private function saveResult(array $data): void
     {
         try {
-            $stockData = new StockData($data);
+            $stockData = new IntraDay($data);
             $symbols = new Symbols();
 
             $symbols->market = Config::get('symbols.market');
@@ -91,6 +93,7 @@ class GetStockData extends Command
             if (!$findResult) {
                 $symbols->save();
             }
+
 
             
 

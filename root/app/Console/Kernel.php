@@ -12,8 +12,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
-        $schedule->command('app:get-stock-data')->everyMinute();
+        $schedule->command('app:get-stock-data')->everyMinute()
+          ->weekdays()
+          ->timezone('America/New York')
+          ->between('4:00', '20:00'); //extended trading time
     }
 
     /**
