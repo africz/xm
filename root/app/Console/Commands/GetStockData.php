@@ -31,7 +31,6 @@ class GetStockData extends Command
     private const FUNCTION = 'TIME_SERIES_INTRADAY';
     private const LOCALTEST = 'LOCALTEST';
     private const LID = 'GetStockData::';
-    private const INTERVAL = ['1m' => '1min', '5m' => '5min'];
     private const OUTPUT = ['full' => 'full', 'compact' => 'compact'];
     /**
      * Execute the console command.
@@ -69,7 +68,7 @@ class GetStockData extends Command
 
     private function getApiUrl($symbol): string
     {
-        $retVal = sprintf(Config::get('symbols.api_url'), self::FUNCTION , $symbol, self::INTERVAL['5m'], self::OUTPUT['compact'], Config::get('symbols.api_key'));
+        $retVal = sprintf(Config::get('symbols.api_url'), self::FUNCTION , $symbol, Config::get('symbols.interval'), self::OUTPUT['compact'], Config::get('symbols.api_key'));
         if (Config::get('symbols.api_mode') === self::LOCALTEST) {
             $retVal = Config::get('symbols.api_test_url');
         }
@@ -112,7 +111,7 @@ class GetStockData extends Command
 
     private function saveSymbolsHistory(IntraDayData $stockData): void
     {
-        $timeSeries = $stockData->getTimeSeries(self::INTERVAL['5m']);
+        $timeSeries = $stockData->getTimeSeries(Config::get('symbols.interval'));
 
         if (!count($timeSeries)) {
             return;

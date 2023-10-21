@@ -10,4 +10,5 @@ return [
     'symbols_test_data'=>env('ALPHA_VANTAGE_API_TEST_DATA'),
     'market'=>env('ALPHA_VANTAGE_API_MARKET'),
     'usa' => explode(',',env('SYMBOLS_USA')),
+    'interval'=>env('ALPHA_VANTAGE_API_INTERVAL')
 ];
