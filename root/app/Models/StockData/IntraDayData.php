@@ -4,7 +4,7 @@ namespace App\Models\StockData;
 
 use Illuminate\BaseModel;
 
-class IntraDay extends StockData
+class IntraDayData extends StockData
 {
     protected const MD = [
         'MetaData' => 'Meta Data',
@@ -17,7 +17,7 @@ class IntraDay extends StockData
 
     ];
     protected const TS = [
-        'TimeSeries' => 'Time Series (5min)',
+        'TimeSeries' => 'Time Series (%s)',
         'open' => '1. open',
         'high' => '2. high',
         'low' => '3. low',
@@ -76,13 +76,19 @@ class IntraDay extends StockData
     {
         return $this->data[self::MD['MetaData']][self::MD['TimeZone']];
     }
-    public function getTimeSeries(): string
+    public function getTimeSeries($interval): array
     {
-        return $this->data[self::TS['TimeSeries']];
+        $retVal = [];
+        foreach ($this->data[sprintf(self::TS['TimeSeries'], $interval)] as $key => $value) {
+            $retVal[] = [
+                'time' => $key,
+                'open' => $value[self::TS['open']],
+                'high' => $value[self::TS['high']],
+                'low' => $value[self::TS['low']],
+                'close' => $value[self::TS['close']],
+                'volume' => $value[self::TS['volume']],
+            ];
+        }
+        return $retVal;
     }
-    public function getTimeSeriesByDate($date): string
-    {
-        return $this->data[self::TS['TimeSeries'][$date]];
-    }
-
 }

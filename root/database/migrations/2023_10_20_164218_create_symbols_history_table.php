@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('symbols_history', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('symbol_id');
+            $table->string('symbol')->length(10);
+            $table->dateTime('time');
             $table->float('open');
             $table->float('high');
             $table->float('low');
