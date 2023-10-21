@@ -48,7 +48,8 @@ class GetStockData extends Command
             ) {
                 foreach ($this->symbols as $symbol) {
 
-                    $json = file_get_contents($this->getApiUrl($symbol));
+                    //$json = file_get_contents($this->getApiUrl($symbol));
+                    $json = $this->getUrlContent($this->getApiUrl($symbol));
 
                     $data = json_decode($json, true);
                     Log::debug(self::LID . __FUNCTION__ . ':' . $symbol . ':received data:', $data);
@@ -64,6 +65,26 @@ class GetStockData extends Command
         }
         Log::info(self::LID . __FUNCTION__ . ':' . 'end execution');
         exit(0);
+    }
+
+
+    private function getUrlContent($url): string
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL,  $url);
+        curl_setopt($ch, CURLOPT_FAILONERROR, true); // Required for HTTP error codes to be reported via our call to curl_error($ch)
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
+        curl_setopt($ch, CURLOPT_HEADER, 0); // no headers in the output
+        $result=curl_exec($ch);
+        if (curl_errno($ch)) {
+            $error_msg = curl_error($ch);
+        }
+        curl_close($ch);
+
+        if (isset($error_msg)) {
+            // TODO - Handle cURL error accordingly
+        }
+        return $result;
     }
 
     private function getApiUrl($symbol): string
