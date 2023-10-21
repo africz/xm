@@ -66,8 +66,6 @@ services:
       - traefik.docker.network=proxy
       - traefik.http.routers.redis-commander.rule=Host(`redis-commander.localhost`)
       - traefik.http.routers.redis-commander.tls=${DOCKER_STACK_SSL}
-    ports:
-      - 8081:8081
     restart: always
     environment:
       - REDIS_HOSTS=${PROJECT_NAME}-${CONFIG}-redis
