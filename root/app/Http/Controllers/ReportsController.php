@@ -19,12 +19,12 @@ use Config;
 class ReportsController extends BaseController
 {
     private const LID = 'Reports::';
+
+    private array $stockData = [];
     public function stockreport(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'market' => 'required',
-            'symbol' => 'required',
-            'time' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -32,8 +32,8 @@ class ReportsController extends BaseController
         }
 
         $input = $request->all();
-        $data=$this->readCache($input);
-        $stockData = new IntraDayData($data);
+        $this->readCache($input);
+        //$stockData = new IntraDayData($data);
 
         if (empty($data)) {
             //read from table
@@ -43,14 +43,17 @@ class ReportsController extends BaseController
         return $this->sendResponse(null, $input);
     }
 
-    private function readCache($input): array
+    private function readCache($input): void
     {
-        $data=[];
-        $json = Redis::get(Config::get('symbols.redis_key') . $input['market'] . '_' . $input['symbol']);
-        $data = json_decode($json, true);
-
-        Log::debug(self::LID . __FUNCTION__ . ':retrieved from cache:', $data);
-        return $data;
+        try {
+            foreach ($input['symbols'] as $key => $symbol) {
+                $json = Redis::get(Config::get('symbols.redis_key') . $input['market'] . '_' . $symbol);
+                $this->stockData[$symbol] = json_decode($json, true);
+                Log::debug(self::LID . __FUNCTION__ . ':symbol:' . $symbol . ':retrieved from cache:', $this->stockData[$symbol]);
+            }
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
     }
 
 
