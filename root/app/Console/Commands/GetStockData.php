@@ -60,6 +60,7 @@ class GetStockData extends Command
                 if (!empty($data)) {
                     $this->saveResult($data);
                 }
+                sleep(12); //to avoid much call in free version
             }
 
         } catch (\Exception $e) {
