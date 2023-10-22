@@ -5,18 +5,13 @@ namespace App\Http\Controllers;
 use DateTime;
 use Illuminate\Http\Request;
 use App\Models\StockData\IntraDayData;
-use App\Http\Requests;
-use App\Models\Symbols;
-use App\Models\SymbolsHistory;
-use DB;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use App\Http\Controllers\BaseController as BaseController;
 use Validator;
 use Config;
 use Illuminate\Support\Facades\RateLimiter;
- 
+
 
 class ReportsController extends BaseController
 {
@@ -28,19 +23,18 @@ class ReportsController extends BaseController
     private array $symbols = [];
     private array $report = [];
 
-    private DateTime $devNow ;
+    private DateTime $devNow;
 
     public function stockreport(Request $request)
     {
-        $this->devNow = new DateTime('2023-10-20 09:40:00'); //just for develop to being independent from real time        
-        
-        
-        if (RateLimiter::tooManyAttempts('stockreport', $perMinute = Config::get('api.reports_rate_limit',10))) {
-            return $this->sendError('Too many attempts,'.$perMinute.' calls allowed per minute.');
+        $this->devNow = new DateTime('2023-10-20 09:40:00', new \DateTimeZone('EST')); //just for develop to being independent from real time        
+
+        if (RateLimiter::tooManyAttempts('stockreport', $perMinute = Config::get('api.reports_rate_limit', 10))) {
+            return $this->sendError('Too many attempts,' . $perMinute . ' calls allowed per minute.');
         }
-         
+
         RateLimiter::hit('stockreport');
-        
+
         $validator = Validator::make($request->all(), [
             'market' => 'required',
         ]);
@@ -60,9 +54,7 @@ class ReportsController extends BaseController
             $this->processDb();
         }
 
-        $result = $this->processRequest($input);
-
-        return $this->sendResponse(null, $result);
+        return $this->sendResponse(null, $this->report);
     }
 
     private function readCache(): bool
@@ -108,18 +100,22 @@ class ReportsController extends BaseController
         if (!count($timeSeries)) {
             return;
         }
-        foreach ($timeSeries as $key => $value) {
-            if ($this->getCurrentTime($value['time'])) {
-                // $this->report['symbols']['open'] = $value[''];
-                // $this->report['symbols']['high'] = $value[''];
-                // $this->report['symbols']['low'] = $value[''];
-                // $this->report['symbols']['close'] = $value[''];
-                // $this->report['symbols']['volume'] = $value[''];
+        $this->report['symbols'][$symbol]['open'] = $timeSeries[0]['open'];
+        $this->report['symbols'][$symbol]['high'] = $timeSeries[0]['high'];
+        $this->report['symbols'][$symbol]['low'] = $timeSeries[0]['low'];
+        $this->report['symbols'][$symbol]['close'] = $timeSeries[0]['close'];
+        $this->report['symbols'][$symbol]['volume'] = $timeSeries[0]['volume'];
+        $this->report['symbols'][$symbol]['open%'] = $this->calculatePercentage($timeSeries, 'open');
+        $this->report['symbols'][$symbol]['high%'] = $this->calculatePercentage($timeSeries, 'high');
+        $this->report['symbols'][$symbol]['low%'] = $this->calculatePercentage($timeSeries, 'low');
+        $this->report['symbols'][$symbol]['close%'] = $this->calculatePercentage($timeSeries, 'close');
 
-            }
-        }
     }
 
+    private function calculatePercentage(array $timeSeries, string $type): float
+    {
+        return ($timeSeries[0][$type] - $timeSeries[1][$type]) / $timeSeries[1][$type] * 100;
+    }
     private function readDb(): void
     {
 
@@ -129,45 +125,5 @@ class ReportsController extends BaseController
 
     }
 
-    private function processRequest(array $input): array
-    {
-        if (!empty($this->stockData)) {
 
-        }
-
-        $retVal = [
-            'market' => $this->market,
-            'symbols' =>
-                [
-                    'symbol' => 'IBM',
-                    'open' => 0,
-                    'high' => 0,
-                    'low' => 0,
-                    'volume' => 0,
-                    'open%' => 0,
-                    'high%' => 0,
-                    'low%' => 0,
-                    'volume%' => 0
-
-                ]
-        ];
-
-        return $retVal;
-    }
-
-    private function getCurrentTime(string $time): bool
-    {
-        $now= new DateTime('now');
-        if ($this->devNow) {
-            $now= $this->devNow;
-        }
-        $filter=$now->format('Y-m-d h:i:s');
-
-        return true;
-    }
-    private function getCurrentEST()
-    {
-        
-        return new DateTime('now', new \DateTimeZone('EST'));
-    }
 }

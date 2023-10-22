@@ -188,6 +188,6 @@ class GetStockData extends Command
     private function saveToRedis(string $symbol, array $data): void
     {
         $market = Config::get('symbols.market', 'USA');
-        Redis::set(Config::get('symbols.redis_key') . $market . '_' . $symbol, json_encode($data), Config::get('symbols.redis_cache_expire'));
+        Redis::setex(Config::get('symbols.redis_key') . $market . '_' . $symbol, Config::get('symbols.redis_cache_expire'), json_encode($data));
     }
 }
