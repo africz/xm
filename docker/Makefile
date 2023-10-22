@@ -8,33 +8,6 @@ list:
 .PHONY: help
 help:
 	$(call help)
-	
-up:
-	$(call up)
-up/network:
-	$(call upNetwork)
-up/traefik:
-	$(call upTraefik)
-
-down:
-	$(call down)
-down/traefik:
-	$(call downTraefik)
-
-mount/apache:
-	$(call mount_container,apache)
-mount/mysql:
-	$(call mount_container,mysql)
-mount/redis:
-	$(call mount_container,redis)
-
-composer/install:
-	$(call composer,install)
-composer/update:
-	$(call composer,update)
-composer/dump-autoload:
-	$(call composer,dump-autoload)
-
 
 artisan:
 	$(call artisan)
@@ -53,12 +26,41 @@ build/mysql:
 build/redis:
 	$(call build,redis)
 
+composer/install:
+	$(call composer,install)
+composer/update:
+	$(call composer,update)
+composer/dump-autoload:
+	$(call composer,dump-autoload)
+
+down:
+	$(call down)
+down/traefik:
+	$(call downTraefik)
+
 logs/apache:
 	$(call container_log,apache)
 logs/mysql:
 	$(call container_log,mysql)
 logs/redis:
 	$(call container_log,redis)
+
+mount/apache:
+	$(call mount_container,apache)
+mount/mysql:
+	$(call mount_container,mysql)
+mount/redis:
+	$(call mount_container,redis)
+
+up:
+	$(call up)
+up/network:
+	$(call upNetwork)
+up/traefik:
+	$(call upTraefik)
+
+
+
 
 
 
