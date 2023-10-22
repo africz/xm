@@ -32,7 +32,13 @@ class RegisterController extends BaseController
    
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
+        
+        $user=User::Where('email','=',$input['email']);
+        if($user){
+            return $this->sendError('This email already exists.');    
+        }
         $user = User::create($input);
+
         $success['token'] =  $user->createToken(Config::get('app.name'))->plainTextToken;
         $success['name'] =  $user->name;
    
