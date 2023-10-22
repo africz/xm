@@ -28,6 +28,21 @@ mount/mysql:
 mount/redis:
 	$(call mount_container,redis)
 
+composer/install:
+	$(call composer,install)
+composer/update:
+	$(call composer,update)
+composer/dump-autoload:
+	$(call composer,dump-autoload)
+
+
+artisan:
+	$(call artisan)
+artisan/stock:
+	$(call artisan_stock)
+artisan/fresh:
+	$(call artisan_fresh)
+
 
 build:
 	$(call build_all)
@@ -44,6 +59,30 @@ logs/mysql:
 	$(call container_log,mysql)
 logs/redis:
 	$(call container_log,redis)
+
+
+
+
+define artisan
+	$(call setup_env,$(ENV_FILE))
+	docker exec -it -w ${WORKFOLDER} ${PROJECT_NAME}-${CONFIG}-apache php artisan $(RUN_ARGS)
+endef
+
+define artisan_stock
+	$(call setup_env,$(ENV_FILE))
+	@docker exec -it -w ${WORKFOLDER} ${PROJECT_NAME}-${CONFIG}-apache php artisan app:get-stock-data
+endef
+define artisan_fresh
+	$(call setup_env,$(ENV_FILE))
+	@docker exec -it -w ${WORKFOLDER} ${PROJECT_NAME}-${CONFIG}-apache php artisan migrate:fresh
+endef
+
+
+define composer
+	$(call setup_env,$(ENV_FILE))
+	docker exec -it -w ${WORKFOLDER} ${PROJECT_NAME}-${CONFIG}-apache composer $(1)
+endef
+
 
 define mount_container
 	$(call setup_env,$(ENV_FILE))
