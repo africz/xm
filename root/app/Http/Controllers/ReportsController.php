@@ -10,15 +10,26 @@ use DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Redis;
 use App\Http\Controllers\BaseController as BaseController;
-
+use Validator;
 
 
 class ReportsController  extends BaseController
 {
-    public function stockreport()
+    public function stockreport(Request $request)
     {
-        //return Article::all();
-        return $this->sendResponse(null, 'xx');
+        $validator = Validator::make($request->all(), [
+            'market' => 'required',
+            'symbol' => 'required',
+            'time' => 'required',
+        ]);
+   
+        if($validator->fails()){
+            return $this->sendError('Validation Error.', $validator->errors());       
+        }
+   
+        $input = $request->all();
+
+        return $this->sendResponse(null, $input);
     }
 
 
