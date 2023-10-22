@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\ReportsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,8 +23,8 @@ use Illuminate\Support\Facades\Route;
 //Route::get('profile', [UserController::class, 'show'])->middleware('auth'); 
 
  Route::get('/test/symbols', [TestController::class, 'getSymbols']);
- Route::post('/reports/stockreport', [TestController::class, 'stockreport']);
-
+ Route::post('/reports/stockreport', [ReportsController::class, 'stockreport']);
+    
    
 Route::controller(RegisterController::class)->group(function(){
     Route::post('register', 'register');
@@ -31,5 +32,5 @@ Route::controller(RegisterController::class)->group(function(){
 });
         
 // Route::middleware('auth:sanctum')->group( function () {
-//     Route::resource('products', ProductController::class);
+//     Route::post('/reports/stockreport', [ReportsController::class, 'stockreport']);
 // });
