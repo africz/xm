@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 
 //Route::get('profile', [UserController::class, 'show'])->middleware('auth'); 
 
-Route::get('/test/symbols', [TestController::class, 'getSymbols']);
+Route::get('/test/symbols/', [TestController::class, 'getSymbols']);
 Route::post('/reports/stockreport', [ReportsController::class, 'stockreport']);
 
 

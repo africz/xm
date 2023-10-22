@@ -117,7 +117,7 @@ class GetStockData extends Command
             ), self::OUTPUT['compact'], Config::get('symbols.api_key'));
 
             if (Config::get('symbols.api_mode', 'SERVER') === self::LOCALTEST) {
-                $retVal = Config::get('symbols.api_test_url');
+                $retVal = sprintf(Config::get('symbols.api_test_url'),self::FUNCTION, $symbol);
             }
 
             Log::debug(self::LID . __FUNCTION__ . ':return:' . $retVal);
@@ -137,7 +137,7 @@ class GetStockData extends Command
             $id = $this->saveSymbols($stockData);
             $this->saveSymbolsHistory($id, $stockData);
             DB::commit();
-            $this->saveToRedis($stockData->getSymbol(),$data);
+            $this->saveToRedis($stockData->getSymbol(), $data);
         } catch (\Exception $e) {
             DB::rollback();
             Log::error(self::LID . __FUNCTION__ . ':' . $e->getMessage());
@@ -187,7 +187,7 @@ class GetStockData extends Command
 
     private function saveToRedis(string $symbol, array $data): void
     {
-        $market=Config::get('symbols.market', 'USA');
-        Redis::set(Config::get('symbols.redis_key') . $market.'_'.$symbol, json_encode($data),Config::get('symbols.redis_cache_expire'));
+        $market = Config::get('symbols.market', 'USA');
+        Redis::set(Config::get('symbols.redis_key') . $market . '_' . $symbol, json_encode($data), Config::get('symbols.redis_cache_expire'));
     }
 }
