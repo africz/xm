@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Redis;
 use App\Http\Controllers\BaseController as BaseController;
 use Validator;
 use Config;
-
+use Illuminate\Support\Facades\RateLimiter;
+ 
 
 class ReportsController extends BaseController
 {
@@ -32,6 +33,14 @@ class ReportsController extends BaseController
     public function stockreport(Request $request)
     {
         $this->devNow = new DateTime('2023-10-20 09:40:00'); //just for develop to being independent from real time        
+        
+        
+        if (RateLimiter::tooManyAttempts('stockreport', $perMinute = Config::get('api.reports_rate_limit',10))) {
+            return $this->sendError('Too many attempts,'.$perMinute.' calls allowed per minute.');
+        }
+         
+        RateLimiter::hit('stockreport');
+        
         $validator = Validator::make($request->all(), [
             'market' => 'required',
         ]);
