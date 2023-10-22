@@ -30,10 +30,10 @@ class ReportsController extends BaseController
         if ($validator->fails()) {
             return $this->sendError('Validation Error.', $validator->errors());
         }
-
+        
         $input = $request->all();
         $this->readCache($input);
-        //$stockData = new IntraDayData($data);
+                //$stockData = new IntraDayData($data);
 
         if (empty($data)) {
             //read from table
@@ -48,13 +48,13 @@ class ReportsController extends BaseController
         try {
             foreach ($input['symbols'] as $key => $symbol) {
                 $json = Redis::get(Config::get('symbols.redis_key') . $input['market'] . '_' . $symbol);
-                $this->stockData[$symbol] = json_decode($json, true);
-                Log::debug(self::LID . __FUNCTION__ . ':symbol:' . $symbol . ':retrieved from cache:', $this->stockData[$symbol]);
+                if (!empty($json)) {
+                    $this->stockData[$symbol] = json_decode($json, true);
+                    Log::debug(self::LID . __FUNCTION__ . ':symbol:' . $symbol . ':retrieved from cache:', $this->stockData[$symbol]);
+                }
             }
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
-
-
 }
