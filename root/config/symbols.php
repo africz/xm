@@ -13,6 +13,7 @@ return [
     'interval' => env('ALPHA_VANTAGE_API_INTERVAL'),
     'try_reconnect' => env('ALPHA_VANTAGE_API_TRY_TO_RECONNECT'),
     'reconnect_interval' => env('ALPHA_VANTAGE_API_RECONNECT_INTERVAL'),
-    'redis_key' => env('ALPHA_VANTAGE_API_REDIS_KEY')
+    'redis_key' => env('ALPHA_VANTAGE_API_REDIS_KEY'),
+    'redis_cache_expire' => env('ALPHA_VANTAGE_API_REDIS_CACHE_EXPIRE')
 
 ];

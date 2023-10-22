@@ -199,7 +199,9 @@ define downProfile
 endef
 
 define import_mysql
-	@docker exec $(join mysql-,$(1)) /bin/sh -c "cat /sql/*.sql | mysql -u root -proot $(join Bodas_,$(shell echo $(1) | tr 'a-z' 'A-Z'))"
+	@set -a
+	$(call source $(ENV_FILE))
+	@docker exec $(join mysql-,$(1)) /bin/sh -c "cat /sql/*.sql | mysql -u root -proot $(join ${PROJECT_NAME},$(shell echo $(1) | tr 'a-z' 'A-Z'))"
 endef
 
 define help
