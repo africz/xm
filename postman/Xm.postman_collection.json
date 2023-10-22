@@ -1,0 +1,163 @@
+{
+	"info": {
+		"_postman_id": "b704f8ea-3bfd-473b-8655-c6c95aa445e9",
+		"name": "Xm",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25313502"
+	},
+	"item": [
+		{
+			"name": "api/register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "africz",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "attila.fricz@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "text"
+						},
+						{
+							"key": "confirm_password",
+							"value": "{{password}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{apiUrl}}/api/register",
+					"host": [
+						"{{apiUrl}}"
+					],
+					"path": [
+						"api",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/login",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "14|euWyGSg080A39ddcoLSz2IAS12AocaIUomjtioM90573c6ae",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "attila.fricz@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{apiUrl}}/api/login",
+					"host": [
+						"{{apiUrl}}"
+					],
+					"path": [
+						"api",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/reports/stockreport",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "16|mwwW7ChD8oiQTuho5iXpLfQlUp7AzRqEZvAkg42Xf7cb212e",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "16|mwwW7ChD8oiQTuho5iXpLfQlUp7AzRqEZvAkg42Xf7cb212e",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "symbol",
+							"value": "IBM",
+							"type": "text"
+						},
+						{
+							"key": "market",
+							"value": "USA",
+							"type": "text"
+						},
+						{
+							"key": "time",
+							"value": "2023-10-20",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{apiUrl}}/api/reports/stockreport",
+					"host": [
+						"{{apiUrl}}"
+					],
+					"path": [
+						"api",
+						"reports",
+						"stockreport"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

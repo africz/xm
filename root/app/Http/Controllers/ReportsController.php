@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use DateTime;
+use DB;
 use Illuminate\Http\Request;
 use App\Models\StockData\IntraDayData;
 use Illuminate\Support\Facades\Log;
@@ -105,19 +106,50 @@ class ReportsController extends BaseController
         $this->report['symbols'][$symbol]['low'] = $timeSeries[0]['low'];
         $this->report['symbols'][$symbol]['close'] = $timeSeries[0]['close'];
         $this->report['symbols'][$symbol]['volume'] = $timeSeries[0]['volume'];
-        $this->report['symbols'][$symbol]['open%'] = $this->calculatePercentage($timeSeries, 'open');
-        $this->report['symbols'][$symbol]['high%'] = $this->calculatePercentage($timeSeries, 'high');
-        $this->report['symbols'][$symbol]['low%'] = $this->calculatePercentage($timeSeries, 'low');
-        $this->report['symbols'][$symbol]['close%'] = $this->calculatePercentage($timeSeries, 'close');
+        $this->report['symbols'][$symbol]['open%'] = $this->calculatePercentage($timeSeries[0]['open'],$timeSeries[1]['open']);
+        $this->report['symbols'][$symbol]['high%'] = $this->calculatePercentage($timeSeries[0]['high'],$timeSeries[1]['high']);
+        $this->report['symbols'][$symbol]['low%'] = $this->calculatePercentage($timeSeries[0]['low'],$timeSeries[1]['low']);
+        $this->report['symbols'][$symbol]['close%'] = $this->calculatePercentage($timeSeries[0]['close'],$timeSeries[1]['close']);
 
     }
 
-    private function calculatePercentage(array $timeSeries, string $type): float
+    private function calculatePercentage(float $current, float $previous): float
     {
-        return ($timeSeries[0][$type] - $timeSeries[1][$type]) / $timeSeries[1][$type] * 100;
+        return round(($current - $previous) / $previous * 100,2);
     }
-    private function readDb(): void
+
+    private function readDb(): bool
     {
+        try {
+            foreach ($this->symbols as $key => $symbol) {
+
+                $symbolId = DB::table('symbols')
+                    ->where('market', '=', $this->market)
+                    ->where('symbol', '=', $symbol)
+                    ->get();
+                $lastRecord = DB::table('symbols_history')
+                    ->where('symbols_id', '=', $symbolId[0]->id)
+                    ->orderByDesc('id')
+                    ->get();
+                $this->report['symbols'][$symbol]['open'] = $lastRecord[0]->open;
+                $this->report['symbols'][$symbol]['high'] = $lastRecord[0]->high;
+                $this->report['symbols'][$symbol]['low'] = $lastRecord[0]->low;
+                $this->report['symbols'][$symbol]['close'] = $lastRecord[0]->close;
+                $this->report['symbols'][$symbol]['volume'] = $lastRecord[0]->volume;
+                $this->report['symbols'][$symbol]['open%'] = $this->calculatePercentage($lastRecord[0]->open, $lastRecord[1]->open);
+                $this->report['symbols'][$symbol]['high%'] = $this->calculatePercentage($lastRecord[0]->high, $lastRecord[1]->high);
+                $this->report['symbols'][$symbol]['low%'] = $this->calculatePercentage($lastRecord[0]->low, $lastRecord[1]->low);
+                $this->report['symbols'][$symbol]['close%'] = $this->calculatePercentage($lastRecord[0]->close, $lastRecord[1]->close);
+
+            }
+
+            if (empty($this->stockData)) {
+                return false;
+            }
+            return true;
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
 
     }
     private function processDb(): void
