@@ -35,7 +35,7 @@ class RegisterController extends BaseController
         $input['password'] = bcrypt($input['password']);
         
         $user=User::Where('email','=',$input['email']);
-        if($user){
+        if(!empty($user->id)){
             return $this->sendError('This email already exists.');    
         }
         $user = User::create($input);
