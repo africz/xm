@@ -28,34 +28,38 @@ class ReportsController extends BaseController
 
     public function stockreport(Request $request)
     {
-        $this->devNow = new DateTime('2023-10-20 09:40:00', new \DateTimeZone('EST')); //just for develop to being independent from real time        
+        try {
+            $this->devNow = new DateTime('2023-10-20 09:40:00', new \DateTimeZone('EST')); //just for develop to being independent from real time        
 
-        if (RateLimiter::tooManyAttempts('stockreport', $perMinute = Config::get('api.reports_rate_limit', 10))) {
-            return $this->sendError('Too many attempts,' . $perMinute . ' calls allowed per minute.');
+            if (RateLimiter::tooManyAttempts('stockreport', $perMinute = Config::get('api.reports_rate_limit', 10))) {
+                return $this->sendError('Too many attempts,' . $perMinute . ' calls allowed per minute.');
+            }
+
+            RateLimiter::hit('stockreport');
+
+            $validator = Validator::make($request->all(), [
+                'market' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error.', $validator->errors());
+            }
+            $input = $request->all();
+
+            $this->symbols = $input['symbols'];
+            $this->market = $input['market'];
+
+            if ($this->readCache()) {
+                $this->processCache();
+            } else {
+                $this->readDb();
+            }
+            return $this->sendResponse(null, $this->report);
+        } catch (\Exception $e) {
+            return $this->sendError($e->getMessage(), $e->getCode());
         }
 
-        RateLimiter::hit('stockreport');
 
-        $validator = Validator::make($request->all(), [
-            'market' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-        $input = $request->all();
-
-        $this->symbols = $input['symbols'];
-        $this->market = $input['market'];
-
-        if ($this->readCache()) {
-            $this->processCache();
-        } else {
-            $this->readDb();
-            $this->processDb();
-        }
-
-        return $this->sendResponse(null, $this->report);
     }
 
     private function readCache(): bool
@@ -106,19 +110,19 @@ class ReportsController extends BaseController
         $this->report['symbols'][$symbol]['low'] = $timeSeries[0]['low'];
         $this->report['symbols'][$symbol]['close'] = $timeSeries[0]['close'];
         $this->report['symbols'][$symbol]['volume'] = $timeSeries[0]['volume'];
-        $this->report['symbols'][$symbol]['open%'] = $this->calculatePercentage($timeSeries[0]['open'],$timeSeries[1]['open']);
-        $this->report['symbols'][$symbol]['high%'] = $this->calculatePercentage($timeSeries[0]['high'],$timeSeries[1]['high']);
-        $this->report['symbols'][$symbol]['low%'] = $this->calculatePercentage($timeSeries[0]['low'],$timeSeries[1]['low']);
-        $this->report['symbols'][$symbol]['close%'] = $this->calculatePercentage($timeSeries[0]['close'],$timeSeries[1]['close']);
+        $this->report['symbols'][$symbol]['open%'] = $this->calculatePercentage($timeSeries[0]['open'], $timeSeries[1]['open']);
+        $this->report['symbols'][$symbol]['high%'] = $this->calculatePercentage($timeSeries[0]['high'], $timeSeries[1]['high']);
+        $this->report['symbols'][$symbol]['low%'] = $this->calculatePercentage($timeSeries[0]['low'], $timeSeries[1]['low']);
+        $this->report['symbols'][$symbol]['close%'] = $this->calculatePercentage($timeSeries[0]['close'], $timeSeries[1]['close']);
 
     }
 
     private function calculatePercentage(float $current, float $previous): float
     {
-        return round(($current - $previous) / $previous * 100,2);
+        return round(($current - $previous) / $previous * 100, 2);
     }
 
-    private function readDb(): bool
+    private function readDb(): void
     {
         try {
             foreach ($this->symbols as $key => $symbol) {
@@ -127,35 +131,30 @@ class ReportsController extends BaseController
                     ->where('market', '=', $this->market)
                     ->where('symbol', '=', $symbol)
                     ->get();
-                $lastRecord = DB::table('symbols_history')
-                    ->where('symbols_id', '=', $symbolId[0]->id)
-                    ->orderByDesc('id')
-                    ->get();
-                $this->report['symbols'][$symbol]['open'] = $lastRecord[0]->open;
-                $this->report['symbols'][$symbol]['high'] = $lastRecord[0]->high;
-                $this->report['symbols'][$symbol]['low'] = $lastRecord[0]->low;
-                $this->report['symbols'][$symbol]['close'] = $lastRecord[0]->close;
-                $this->report['symbols'][$symbol]['volume'] = $lastRecord[0]->volume;
-                $this->report['symbols'][$symbol]['open%'] = $this->calculatePercentage($lastRecord[0]->open, $lastRecord[1]->open);
-                $this->report['symbols'][$symbol]['high%'] = $this->calculatePercentage($lastRecord[0]->high, $lastRecord[1]->high);
-                $this->report['symbols'][$symbol]['low%'] = $this->calculatePercentage($lastRecord[0]->low, $lastRecord[1]->low);
-                $this->report['symbols'][$symbol]['close%'] = $this->calculatePercentage($lastRecord[0]->close, $lastRecord[1]->close);
-
+                if (!empty($symbolId[0]->id)) {
+                    $lastRecord = DB::table('symbols_history')
+                        ->where('symbols_id', '=', $symbolId[0]->id)
+                        ->orderByDesc('id')
+                        ->get();
+                    $this->report['symbols'][$symbol]['open'] = $lastRecord[0]->open;
+                    $this->report['symbols'][$symbol]['high'] = $lastRecord[0]->high;
+                    $this->report['symbols'][$symbol]['low'] = $lastRecord[0]->low;
+                    $this->report['symbols'][$symbol]['close'] = $lastRecord[0]->close;
+                    $this->report['symbols'][$symbol]['volume'] = $lastRecord[0]->volume;
+                    $this->report['symbols'][$symbol]['open%'] = $this->calculatePercentage($lastRecord[0]->open, $lastRecord[1]->open);
+                    $this->report['symbols'][$symbol]['high%'] = $this->calculatePercentage($lastRecord[0]->high, $lastRecord[1]->high);
+                    $this->report['symbols'][$symbol]['low%'] = $this->calculatePercentage($lastRecord[0]->low, $lastRecord[1]->low);
+                    $this->report['symbols'][$symbol]['close%'] = $this->calculatePercentage($lastRecord[0]->close, $lastRecord[1]->close);
+                }
             }
 
             if (empty($this->stockData)) {
-                return false;
+                throw new \Exception('Database is empty, get data first with command');
             }
-            return true;
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
 
     }
-    private function processDb(): void
-    {
-
-    }
-
 
 }
