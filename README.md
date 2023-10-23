@@ -148,6 +148,27 @@ This is scheduled in Laravel scheduler to execute periodically in root/app/Conso
           ->timezone('America/New York')
           ->between('4:00', '20:00'); //extended trading time
  
-To run manually issue in docker folder make artisan/stock
+To run manually issue in docker folder 
+make artisan/stock
+
+Run took a while due wait beetwen each call 12 sec as default settings in .env 
+Free version has limitation 5 call in a minute and 100 calls daily hence this limitation 
+I did set 12 sec waiting and an emulator to use same files from locally for developing instead of call
+the server all the time and run out from 100 calls. Also in my past experience on paid API calls better
+to emulate calls in developing or later in debugging bug fixing phase and save money to my employer.
+
+Retrieved data will save to Redis and DB symbols and symbols_history table
+Redis cache expire time is adjustable in .env 
+
+ALPHA_VANTAGE_API_REDIS_CACHE_EXPIRE=600 #key expired after 600 sec
+
+I did set to long to allow debugging, in production certainly reducable to lower time.
+
+Once this command retrieves data, you can use the Postman API calls to get the real time price data.
+
+You can import the calls from postman folder and the environment too.
+
+
+
 
 
